@@ -3,7 +3,7 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import Product, Cart, Order, ProductInCart
-from .serializers import ListProductSerializer, SingleProductSerializer, CreateProductSerializer, CartSerializer, ProductInCartSerializer, ListOrderSerializer, CreateOrderSerializer
+from .serializers import ListProductSerializer, SingleProductSerializer, CreateProductSerializer, CartSerializer, ProductInCartSerializer, ListOrderSerializer, CreateOrderSerializer, CreateProductInCartSerializer
 from .filters import ProductFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from .permissions import IsAdminOrReadOnly
@@ -41,11 +41,14 @@ class CartView(APIView):
             ).get(user=request.user)
             return Response(CartSerializer(cart).data, status=status.HTTP_200_OK)
         except ObjectDoesNotExist:
-            cart = Cart.objects.create(user=request.user)
+            Cart.objects.create(user=request.user)
+            cart = Cart.objects.annotate(
+                total_price=(Sum(F('products__count') * F('products__product__price'), output_field=FloatField()))
+            ).get(user=request.user)
             return Response(CartSerializer(cart).data, status=status.HTTP_200_OK)
 
     def post(self, request):
-        serializer = ProductInCartSerializer(data=request.data)
+        serializer = CreateProductInCartSerializer(data=request.data)
         if serializer.is_valid():
             try:
                 cart = Cart.objects.get(user=request.user)

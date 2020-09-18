@@ -55,3 +55,4 @@ class Order(models.Model):
     date_of_creation = models.DateField(auto_created=True)
     is_paid = models.BooleanField(default=False)
     date_of_delivery = models.DateTimeField()
+    total_price = models.FloatField()

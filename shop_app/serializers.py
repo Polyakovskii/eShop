@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import Product, Cart, ProductInCart, Order
 import datetime
+from django.db.models import F, Sum, FloatField
 
 
 class ListProductSerializer(serializers.ModelSerializer):
@@ -29,9 +30,7 @@ class CreateProductSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'category', 'producer', 'description', 'price', 'created')
 
 
-class ProductInCartSerializer(serializers.ModelSerializer):
-
-    id = serializers.IntegerField()
+class CreateProductInCartSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductInCart
@@ -43,6 +42,15 @@ class ProductInCartSerializer(serializers.ModelSerializer):
             count=validated_data['count']
         )
         return product
+
+
+class ProductInCartSerializer(serializers.ModelSerializer):
+
+    id = serializers.IntegerField()
+
+    class Meta:
+        model = ProductInCart
+        fields = ('id', 'product', 'count', )
 
 
 class CartSerializer(serializers.ModelSerializer):
@@ -57,7 +65,7 @@ class CartSerializer(serializers.ModelSerializer):
 
 class ListOrderSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Cart
+        model = Order
         fields = '__all__'
 
 
@@ -69,8 +77,10 @@ class CreateOrderSerializer(serializers.ModelSerializer):
         fields = ('date_of_delivery', )
 
     def create(self, request, validated_data):
-        order = Order.objects.create(date_of_delivery=validated_data['date_of_delivery'], user=request.user, date_of_creation=datetime.datetime.now())
-        cart = Cart.objects.get(user=order.user)
+        cart = Cart.objects.annotate(
+            total_price=(Sum(F('products__count') * F('products__product__price'), output_field=FloatField()))
+        ).get(user=request.user)
+        order = Order.objects.create(date_of_delivery=validated_data['date_of_delivery'], user=request.user, date_of_creation=datetime.datetime.now(), total_price=cart.total_price)
         for product in cart.products.all():
             order.products.add(product)
         order.save()
