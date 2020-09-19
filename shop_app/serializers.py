@@ -56,7 +56,6 @@ class ProductInCartSerializer(serializers.ModelSerializer):
 class CartSerializer(serializers.ModelSerializer):
 
     products = ProductInCartSerializer(many=True)
-    total_price = serializers.FloatField()
 
     class Meta:
         model = Cart
@@ -77,6 +76,7 @@ class CreateOrderSerializer(serializers.ModelSerializer):
         fields = ('date_of_delivery', )
 
     def create(self, request, validated_data):
+        #TODO rework this
         cart = Cart.objects.annotate(
             total_price=(Sum(F('products__count') * F('products__product__price'), output_field=FloatField()))
         ).get(user=request.user)

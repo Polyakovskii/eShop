@@ -47,6 +47,16 @@ class Cart(models.Model):
     def clear(self):
         self.products.clear()
 
+    @property
+    def total_price(self):
+        total_price = 0
+        for product in self.products.all():
+            total_price += product.product.price * product.count
+        return total_price
+
+    def add_product(self, product: ProductInCart):
+        self.products.add(product)
+
 
 class Order(models.Model):
 

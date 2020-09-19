@@ -36,15 +36,10 @@ class CartView(APIView):
 
     def get(self, request):
         try:
-            cart = Cart.objects.annotate(
-                total_price=(Sum(F('products__count') * F('products__product__price'), output_field=FloatField()))
-            ).get(user=request.user)
+            cart = Cart.objects.get(user=request.user)
             return Response(CartSerializer(cart).data, status=status.HTTP_200_OK)
         except ObjectDoesNotExist:
-            Cart.objects.create(user=request.user)
-            cart = Cart.objects.annotate(
-                total_price=(Sum(F('products__count') * F('products__product__price'), output_field=FloatField()))
-            ).get(user=request.user)
+            cart = Cart.objects.create(user=request.user)
             return Response(CartSerializer(cart).data, status=status.HTTP_200_OK)
 
     def post(self, request):
@@ -54,8 +49,7 @@ class CartView(APIView):
                 cart = Cart.objects.get(user=request.user)
             except ObjectDoesNotExist:
                 cart = Cart.objects.create(user=request.user)
-            product = serializer.create(serializer.validated_data)
-            cart.products.add(product)
+            cart.add_product(serializer.create(serializer.validated_data))
             return Response(status=status.HTTP_201_CREATED)
         else:
             return Response(status.HTTP_400_BAD_REQUEST)
@@ -63,6 +57,7 @@ class CartView(APIView):
     def put(self, request):
         serializer = ProductInCartSerializer(data=request.data)
         if serializer.is_valid():
+            #TODO change this
             product = ProductInCart.objects.get(pk=serializer.validated_data.get('id'))
             product.count = serializer.validated_data['count']
             product.save()
@@ -87,6 +82,7 @@ class OrdersView(viewsets.GenericViewSet,
         return queryset
 
     def create(self, request, *args, **kwargs):
+        #TODO change this
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         if Cart.objects.get(user=request.user).products.all().exists():
