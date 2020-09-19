@@ -44,7 +44,7 @@ class CreateProductInCartSerializer(serializers.ModelSerializer):
         return product
 
 
-class ProductInCartSerializer(serializers.ModelSerializer):
+class UpdateProductInCartSerializer(serializers.ModelSerializer):
 
     id = serializers.IntegerField()
 
@@ -55,7 +55,7 @@ class ProductInCartSerializer(serializers.ModelSerializer):
 
 class CartSerializer(serializers.ModelSerializer):
 
-    products = ProductInCartSerializer(many=True)
+    products = UpdateProductInCartSerializer(many=True)
 
     class Meta:
         model = Cart

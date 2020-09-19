@@ -1,9 +1,8 @@
-from django.db.models import F, Sum, FloatField
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import Product, Cart, Order, ProductInCart
-from .serializers import ListProductSerializer, SingleProductSerializer, CreateProductSerializer, CartSerializer, ProductInCartSerializer, ListOrderSerializer, CreateOrderSerializer, CreateProductInCartSerializer
+from .serializers import ListProductSerializer, SingleProductSerializer, CreateProductSerializer, CartSerializer, UpdateProductInCartSerializer, ListOrderSerializer, CreateOrderSerializer, CreateProductInCartSerializer
 from .filters import ProductFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from .permissions import IsAdminOrReadOnly
@@ -55,15 +54,14 @@ class CartView(APIView):
             return Response(status.HTTP_400_BAD_REQUEST)
 
     def put(self, request):
-        serializer = ProductInCartSerializer(data=request.data)
+        serializer = UpdateProductInCartSerializer(data=request.data)
         if serializer.is_valid():
-            #TODO change this
-            product = ProductInCart.objects.get(pk=serializer.validated_data.get('id'))
-            product.count = serializer.validated_data['count']
-            product.save()
+            serializer.instance = ProductInCart.objects.get(pk=serializer.validated_data.get('id'))
+            serializer.save()
             return Response(status=status.HTTP_202_ACCEPTED)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
 
 class OrdersView(viewsets.GenericViewSet,
                  viewsets.mixins.ListModelMixin,
