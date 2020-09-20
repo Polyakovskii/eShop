@@ -1,6 +1,7 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.contrib.auth.models import User
 from .models import Product, Cart, Order, ProductInCart
 from .serializers import ListProductSerializer,\
         SingleProductSerializer, \
@@ -9,7 +10,8 @@ from .serializers import ListProductSerializer,\
         UpdateProductInCartSerializer, \
         ListOrderSerializer, \
         CreateOrderSerializer, \
-        CreateProductInCartSerializer
+        CreateProductInCartSerializer, \
+        UserSerializer
 from .filters import ProductFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from .permissions import IsAdminOrReadOnly
@@ -97,3 +99,8 @@ class OrdersView(viewsets.GenericViewSet,
             return Response(status=status.HTTP_201_CREATED)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST, data="Your cart is empty")
+
+
+class UserCreateView(viewsets.GenericViewSet, viewsets.mixins.CreateModelMixin):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
