@@ -2,14 +2,20 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import Product, Cart, Order, ProductInCart
-from .serializers import ListProductSerializer, SingleProductSerializer, CreateProductSerializer, CartSerializer, UpdateProductInCartSerializer, ListOrderSerializer, CreateOrderSerializer, CreateProductInCartSerializer
+from .serializers import ListProductSerializer,\
+        SingleProductSerializer, \
+        CreateProductSerializer, \
+        CartSerializer, \
+        UpdateProductInCartSerializer, \
+        ListOrderSerializer, \
+        CreateOrderSerializer, \
+        CreateProductInCartSerializer
 from .filters import ProductFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from .permissions import IsAdminOrReadOnly
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import send_mail
 from eShop.settings import EMAIL_HOST_USER
-# Create your views here.
 
 
 class ProductView(viewsets.GenericViewSet,
@@ -80,10 +86,9 @@ class OrdersView(viewsets.GenericViewSet,
         return queryset
 
     def create(self, request, *args, **kwargs):
-        #TODO change this
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        if Cart.objects.get(user=request.user).products.all().exists():
+        if not Cart.objects.get(user=request.user).is_empty():
             order = serializer.create(request, serializer.validated_data)
             mail_to = order.user.email
             subject = 'Your order'

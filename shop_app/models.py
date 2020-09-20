@@ -44,9 +44,6 @@ class Cart(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     products = models.ManyToManyField(ProductInCart)
 
-    def clear(self):
-        self.products.clear()
-
     @property
     def total_price(self):
         total_price = 0
@@ -54,8 +51,18 @@ class Cart(models.Model):
             total_price += product.product.price * product.count
         return total_price
 
+    def clear(self):
+        self.products.clear()
+        self.save()
+
     def add_product(self, product: ProductInCart):
         self.products.add(product)
+
+    def is_empty(self):
+        if self.products.all().exists():
+            return False
+        else:
+            return True
 
 
 class Order(models.Model):

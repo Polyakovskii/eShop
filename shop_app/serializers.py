@@ -76,14 +76,12 @@ class CreateOrderSerializer(serializers.ModelSerializer):
         fields = ('date_of_delivery', )
 
     def create(self, request, validated_data):
-        #TODO rework this
-        cart = Cart.objects.annotate(
-            total_price=(Sum(F('products__count') * F('products__product__price'), output_field=FloatField()))
-        ).get(user=request.user)
-        order = Order.objects.create(date_of_delivery=validated_data['date_of_delivery'], user=request.user, date_of_creation=datetime.datetime.now(), total_price=cart.total_price)
+        cart = Cart.objects.get(user=request.user)
+        order = Order.objects.create(date_of_delivery=validated_data['date_of_delivery'],
+                                     user=request.user, date_of_creation=datetime.datetime.now(),
+                                     total_price=cart.total_price)
         for product in cart.products.all():
             order.products.add(product)
         order.save()
         cart.clear()
-        cart.save()
         return order
