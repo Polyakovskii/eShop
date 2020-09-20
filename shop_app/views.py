@@ -102,5 +102,6 @@ class OrdersView(viewsets.GenericViewSet,
 
 
 class UserCreateView(viewsets.GenericViewSet, viewsets.mixins.CreateModelMixin):
+
     queryset = User.objects.all()
     serializer_class = UserSerializer
